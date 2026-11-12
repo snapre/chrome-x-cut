@@ -1,0 +1,56 @@
+{
+  "manifest_version": 3,
+  "name": "Social Photo Saver",
+  "version": "0.5.3",
+  "description": "Save original images from X, Threads, and Instagram in one click.",
+  "permissions": [
+    "activeTab",
+    "alarms",
+    "contextMenus",
+    "downloads",
+    "nativeMessaging",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://x.com/*",
+    "https://twitter.com/*",
+    "https://pbs.twimg.com/*",
+    "https://threads.com/*",
+    "https://*.threads.com/*",
+    "https://threads.net/*",
+    "https://*.threads.net/*",
+    "https://instagram.com/*",
+    "https://*.instagram.com/*",
+    "https://*.cdninstagram.com/*",
+    "https://*.fbcdn.net/*"
+  ],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://x.com/*",
+        "https://twitter.com/*",
+        "https://threads.com/*",
+        "https://*.threads.com/*",
+        "https://threads.net/*",
+        "https://*.threads.net/*",
+        "https://instagram.com/*",
+        "https://*.instagram.com/*"
+      ],
+      "js": [
+        "src/url-utils.js",
+        "src/content.js"
+      ],
+      "css": [
+        "src/content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "Save social photo",
+    "default_popup": "src/popup.html"
+  }
+}

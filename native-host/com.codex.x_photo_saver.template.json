@@ -1,0 +1,9 @@
+{
+  "name": "com.codex.x_photo_saver",
+  "description": "Native host for importing social photos into macOS Photos.",
+  "path": "/Users/you/Library/Application Support/XPhotoSaver/x_photo_saver_host.sh",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://EXTENSION_ID/"
+  ]
+}
