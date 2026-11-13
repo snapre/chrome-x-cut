@@ -1,9 +1,9 @@
 {
   "name": "chrome-x-cut",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "private": true,
   "description": "Chrome extension for saving original X, Threads, and Instagram photos in one click.",
   "scripts": {
-    "test": "node tests/url-utils.test.mjs && node --test tests/save-queue.test.mjs && node --check src/url-utils.js && node --check src/background.js && node --check src/save-queue.js && node --check src/content.js && node --check src/popup.js && python3 -m unittest discover -s tests -p '*_test.py' && python3 -m py_compile native-host/x_photo_saver_host.py"
+    "test": "node tests/url-utils.test.mjs && node --test tests/save-queue.test.mjs && node --check src/url-utils.js && node --check src/background.js && node --check src/save-queue.js && node --check src/shutter-sound.js && node --check src/content.js && node --check src/popup.js && python3 -m unittest discover -s tests -p '*_test.py' && python3 -m py_compile native-host/x_photo_saver_host.py"
   }
 }

@@ -17,7 +17,6 @@
   let lastPointerPoint = null;
   let hideTimer = 0;
   let queueFeedbackTimer = 0;
-  let shutterAudioContext = null;
   let confettiCanvas = null;
   let confettiAnimation = 0;
 
@@ -45,7 +44,6 @@
       return undefined;
     }
     if (message.type === "X_SAVE_RESULT" && message.result?.ok && !document.hidden) {
-      playShutterSound();
       launchSuccessConfetti();
     }
     if (message.type === "X_QUEUE_RESULT") {
@@ -88,8 +86,7 @@
     button.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      primeShutterSound();
-      saveCandidate(activeCandidate || getBestImageCandidate());
+      saveCandidate(activeCandidate || getBestImageCandidate(), CutShutterSound.prepare());
     });
     getOverlayRoot().appendChild(button);
     return button;
@@ -184,11 +181,11 @@
     return Math.min(Math.max(value, min), max);
   }
 
-  async function saveCurrentPhoto() {
-    return saveCandidate(getBestImageCandidate());
+  async function saveCurrentPhoto(preparedAudio) {
+    return saveCandidate(getBestImageCandidate(), preparedAudio);
   }
 
-  async function saveCandidate(candidate) {
+  async function saveCandidate(candidate, preparedAudio) {
     let result;
     try {
       if (!candidate) {
@@ -203,6 +200,9 @@
       result = { ok: false, error: error.message };
     }
     showQueueResult(result, candidate);
+    if (preparedAudio && result?.ok && !result.duplicate) {
+      CutShutterSound.play(preparedAudio).catch(() => {});
+    }
     return result;
   }
 
@@ -391,8 +391,7 @@
   function handleKeydown(event) {
     if (!event.repeat && event.altKey && event.shiftKey && event.code === "KeyS") {
       event.preventDefault();
-      primeShutterSound();
-      saveCurrentPhoto();
+      saveCurrentPhoto(CutShutterSound.prepare());
     }
   }
 
@@ -462,73 +461,6 @@
 
   function getOverlayRoot() {
     return document.body || document.documentElement;
-  }
-
-  function primeShutterSound() {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) {
-      return;
-    }
-    try {
-      shutterAudioContext ||= new AudioContext();
-      if (shutterAudioContext.state === "suspended") {
-        shutterAudioContext.resume().catch(() => {});
-      }
-    } catch (_error) {
-      // Saving and visual feedback can proceed when audio is unavailable.
-    }
-  }
-
-  function playShutterSound() {
-    if (!shutterAudioContext && navigator.userActivation?.hasBeenActive) {
-      primeShutterSound();
-    }
-    const context = shutterAudioContext;
-    if (!context || context.state !== "running") {
-      return;
-    }
-
-    const start = context.currentTime + 0.01;
-    playClickTone(context, start, 1250, 0.04, 0.14);
-    playClickTone(context, start + 0.055, 760, 0.06, 0.1);
-    playShutterNoise(context, start + 0.015, 0.075, 0.04);
-  }
-
-  function playClickTone(context, start, frequency, duration, volume) {
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
-    oscillator.type = "square";
-    oscillator.frequency.setValueAtTime(frequency, start);
-    gain.gain.setValueAtTime(volume, start);
-    gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
-    oscillator.connect(gain);
-    gain.connect(context.destination);
-    oscillator.start(start);
-    oscillator.stop(start + duration);
-  }
-
-  function playShutterNoise(context, start, duration, volume) {
-    const sampleCount = Math.max(1, Math.floor(context.sampleRate * duration));
-    const buffer = context.createBuffer(1, sampleCount, context.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < sampleCount; i += 1) {
-      data[i] = (Math.random() * 2 - 1) * (1 - i / sampleCount);
-    }
-
-    const source = context.createBufferSource();
-    const filter = context.createBiquadFilter();
-    const gain = context.createGain();
-    filter.type = "bandpass";
-    filter.frequency.setValueAtTime(1800, start);
-    filter.Q.setValueAtTime(0.8, start);
-    source.buffer = buffer;
-    gain.gain.setValueAtTime(volume, start);
-    gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
-    source.connect(filter);
-    filter.connect(gain);
-    gain.connect(context.destination);
-    source.start(start);
-    source.stop(start + duration);
   }
 
   function launchSuccessConfetti() {

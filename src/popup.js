@@ -183,6 +183,7 @@
   }
 
   async function saveFromActiveTab() {
+    const preparedAudio = CutShutterSound.prepare();
     window.clearTimeout(saveFeedbackTimer);
     setStatus("");
     setSaveFeedback("正在加入队列…");
@@ -201,6 +202,9 @@
 
       setSaveFeedback(response.duplicate ? "已在队列中" : "已加入队列", true);
       saveFeedbackTimer = window.setTimeout(setSaveFeedback, 1200);
+      if (!response.duplicate) {
+        CutShutterSound.play(preparedAudio).catch(() => {});
+      }
     } catch (error) {
       setSaveFeedback();
       setStatus(error.message, true);
